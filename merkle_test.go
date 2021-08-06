@@ -5,6 +5,28 @@ import (
 	"time"
 )
 
+func TestSortedKeySet(t *testing.T) {
+	c1 := map[uint8]*Trie{
+		1: nil,
+		2: nil,
+		3: nil,
+	}
+
+	c2 := map[uint8]*Trie{
+		2: nil,
+		4: nil,
+	}
+
+	sorted := sortedKeySet(c1, c2)
+	expected := []uint8{1, 2, 3, 4}
+
+	for i, k := range sorted {
+		if k != expected[i] {
+			t.Fatalf("expected: %v actual: %v", expected, sorted)
+		}
+	}
+}
+
 func TestMurmurCompatibility(t *testing.T) {
 	trie := &Trie{}
 
@@ -12,7 +34,7 @@ func TestMurmurCompatibility(t *testing.T) {
 	expected := uint32(1519865632)
 
 	if trie.Hash != expected {
-		t.Errorf("murmur hash imcompatable. expect: %d actual: %d", trie.Hash, expected)
+		t.Fatalf("murmur hash imcompatable. expect: %d actual: %d", trie.Hash, expected)
 	}
 }
 
