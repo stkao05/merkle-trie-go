@@ -70,10 +70,10 @@ func sortedKeySet(t1 map[uint8]*Trie, t2 map[uint8]*Trie) []uint8 {
 	return uintKeys
 }
 
-func BranchPoint(trie1 *Trie, trie2 *Trie) (timestamp int64, err error) {
+func BranchPoint(trie1 *Trie, trie2 *Trie) (time.Time, error) {
 	node1 := trie1
 	node2 := trie2
-	time := ""
+	timestr := ""
 
 	for {
 		sorted := sortedKeySet(node1.Children, node2.Children)
@@ -98,14 +98,14 @@ func BranchPoint(trie1 *Trie, trie2 *Trie) (timestamp int64, err error) {
 		if diffKey == -1 {
 			break
 		} else {
-			time += strconv.Itoa(diffKey)
+			timestr += strconv.Itoa(diffKey)
 		}
 	}
 
-	if time == "" {
-		return -1, nil
+	if timestr == "" {
+		return time.Time{}, nil
 	}
 
-	timeInt, err := strconv.Atoi(time)
-	return int64(timeInt), err
+	ms, err := strconv.Atoi(timestr)
+	return time.Unix(0, int64(ms) * int64(time.Microsecond)), err
 }

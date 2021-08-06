@@ -27,9 +27,27 @@ func TestSortedKeySet(t *testing.T) {
 	}
 }
 
+// data is a slice of [id, timestamp] tuple
+func createTrie(datas [][]string) (*Trie, error) {
+	trie := Trie{}
+
+	for _, d := range datas {
+		id, timestamp := d[0], d[1]
+		ts, err := time.Parse(time.RFC3339, timestamp)
+
+		if err != nil {
+			return nil, err
+		}
+
+		Insert(&trie, id, ts)
+	}
+
+	return &trie, nil
+}
+
 func TestMurmurCompatibility(t *testing.T) {
 	trie := &Trie{}
-  ts := time.Unix(0, 1628125200 * int64(time.Microsecond))
+	ts := time.Unix(0, 1628125200*int64(time.Microsecond))
 
 	Insert(trie, "test_id", ts)
 	expected := uint32(1519865632)
@@ -40,24 +58,17 @@ func TestMurmurCompatibility(t *testing.T) {
 }
 
 func TestInsert(t *testing.T) {
-	trie := &Trie{}
-
 	datas := [][]string{
-		{"2021-08-05T00:00:00.000Z", "0"},
-		{"2021-08-05T01:00:00.000Z", "1"},
-		{"2021-08-05T02:00:00.000Z", "2"},
-		{"2021-08-05T03:00:00.000Z", "3"},
+		{"0", "2021-08-05T00:00:00.000Z"},
+		{"1", "2021-08-05T01:00:00.000Z"},
+		{"2", "2021-08-05T02:00:00.000Z"},
+		{"3", "2021-08-05T03:00:00.000Z"},
 	}
 
-	for _, d := range datas {
-		timestamp, id := d[0], d[1]
-		ts, err := time.Parse(time.RFC3339, timestamp)
+	trie, err := createTrie(datas)
 
-		if err != nil {
-			t.Fatalf("Test code error: unable to parse timestamp: %s", timestamp)
-		}
-
-		Insert(trie, id, ts)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	expected := uint32(1216950095)
