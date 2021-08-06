@@ -29,8 +29,9 @@ func TestSortedKeySet(t *testing.T) {
 
 func TestMurmurCompatibility(t *testing.T) {
 	trie := &Trie{}
+  ts := time.Unix(0, 1628125200 * int64(time.Microsecond))
 
-	Insert(trie, "test_id", 1628125200)
+	Insert(trie, "test_id", ts)
 	expected := uint32(1519865632)
 
 	if trie.Hash != expected {
@@ -51,13 +52,12 @@ func TestInsert(t *testing.T) {
 	for _, d := range datas {
 		timestamp, id := d[0], d[1]
 		ts, err := time.Parse(time.RFC3339, timestamp)
-		ms := ts.UnixNano() / int64(time.Millisecond)
 
 		if err != nil {
 			t.Fatalf("Test code error: unable to parse timestamp: %s", timestamp)
 		}
 
-		Insert(trie, id, ms)
+		Insert(trie, id, ts)
 	}
 
 	expected := uint32(1216950095)

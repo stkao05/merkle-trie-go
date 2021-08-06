@@ -4,6 +4,7 @@ import (
 	"hash"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/spaolacci/murmur3"
 )
@@ -16,10 +17,11 @@ type Trie struct {
 var Hasher hash.Hash32 = murmur3.New32WithSeed(0)
 var Slot int64 = 60 * 1000
 
-func Insert(trie *Trie, id string, timestamp int64) {
+func Insert(trie *Trie, id string, timestamp time.Time) {
 	defer Hasher.Reset()
 
-	timeslot := strconv.FormatInt(int64(timestamp/Slot), 10)
+	ms := timestamp.UnixNano() / int64(time.Microsecond)
+	timestr := strconv.FormatInt(ms/Slot, 10)
 	Hasher.Write([]byte(id))
 	hash := Hasher.Sum32()
 
@@ -30,7 +32,7 @@ func Insert(trie *Trie, id string, timestamp int64) {
 	}
 
 	node := trie
-	for _, c := range timeslot {
+	for _, c := range timestr {
 		child := node.Children[uint8(c)]
 
 		if child == nil {
@@ -68,26 +70,42 @@ func sortedKeySet(t1 map[uint8]*Trie, t2 map[uint8]*Trie) []uint8 {
 	return uintKeys
 }
 
-func BranchPoint(trie1 *Trie, trie2 *Trie) (timestamp int64) {
-// 	node1 := trie1
-// 	node2 := trie2
-// 	time := ""
-// 
-	// 	for {
-	//     sorted :=  sortedKeySet(node1.Children, node2.Children)
-	//
-	//     var diffKey uint8
-	//     for k := range(sorted) {
-	//       var h1, h2 uint32
-	//
-	//
-	//
-	//
-	//     }
-	//
-	//
-	//
-	// 	}
+func BranchPoint(trie1 *Trie, trie2 *Trie) (timestamp int64, err error) {
+	node1 := trie1
+	node2 := trie2
+	time := ""
 
-	return 0
+	for {
+		sorted := sortedKeySet(node1.Children, node2.Children)
+
+		diffKey := -1
+		for _, k := range sorted {
+			c1, c2 := node1.Children[k], node2.Children[k]
+
+			if (c1 != nil && c2 != nil) && (c1.Hash != c2.Hash) {
+				diffKey = int(k)
+				break
+			}
+
+			if c1 == nil && c2 == nil {
+				break
+			}
+
+			// either one of c1 and c2 has value
+			diffKey = int(k)
+		}
+
+		if diffKey == -1 {
+			break
+		} else {
+			time += strconv.Itoa(diffKey)
+		}
+	}
+
+	if time == "" {
+		return -1, nil
+	}
+
+	timeInt, err := strconv.Atoi(time)
+	return int64(timeInt), err
 }
